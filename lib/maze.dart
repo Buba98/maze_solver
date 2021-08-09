@@ -140,6 +140,45 @@ class Maze {
       }
     }
   }
+
+  void randomizedPrimAlgorithm() {
+    Cell cell = getCellByIndex(
+        index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
+            this.rows * this.columns - 1))
+      ..isVisited = true;
+    List<Wall> walls = [];
+    cell.walls.forEach((Wall wall) {
+      if (wall.cells.length == 2) walls.add(wall);
+    });
+    Wall wall;
+
+    while (walls.isNotEmpty) {
+      wall = walls.removeAt(
+          MathUtils.randomNumberWithinRangeInclusiveFromZero(walls.length - 1));
+      if (wall.cells[0].isVisited && wall.cells[1].isVisited)
+        continue;
+      else {
+        wall.isWall = false;
+        if (wall.cells[0].isVisited) {
+          wall.cells[1]
+            ..isVisited = true
+            ..walls.forEach((Wall newWall) {
+              if (newWall.isWall &&
+                  !walls.contains(newWall) &&
+                  newWall.cells.length == 2) walls.add(newWall);
+            });
+        } else {
+          wall.cells[0]
+            ..isVisited = true
+            ..walls.forEach((Wall newWall) {
+              if (newWall.isWall &&
+                  !walls.contains(newWall) &&
+                  newWall.cells.length == 2) walls.add(newWall);
+            });
+        }
+      }
+    }
+  }
 }
 
 class Cell {
