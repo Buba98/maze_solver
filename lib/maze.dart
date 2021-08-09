@@ -179,6 +179,35 @@ class Maze {
       }
     }
   }
+
+  void randomizedAldousBroderAlgorithm() {
+    int numberUnvisitedCells = this.rows * this.columns;
+
+    Cell cell = getCellByIndex(
+        index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
+            numberUnvisitedCells - 1))
+      ..isVisited = true;
+
+    numberUnvisitedCells -= 1;
+
+    List<Cell> neighbours;
+    Cell neighbour;
+
+    while (numberUnvisitedCells > 0) {
+      neighbours = cell.neighbours;
+      neighbour = neighbours[MathUtils.randomNumberWithinRangeInclusiveFromZero(neighbours.length - 1)];
+      if(!neighbour.isVisited) {
+        neighbour.isVisited = true;
+        numberUnvisitedCells -= 1;
+        for(Wall wall in cell.walls)
+          if(wall.cells.contains(neighbour)){
+            wall.isWall = false;
+            break;
+          }
+      }
+      cell = neighbour;
+    }
+  }
 }
 
 class Cell {
@@ -208,6 +237,16 @@ class Cell {
     if (wallRight.isWall) i += 1;
 
     return i;
+  }
+
+  List<Cell> get neighbours {
+    List<Cell> neighbours = [];
+
+    walls.forEach((Wall wall) => wall.cells.forEach((Cell cell) {
+          if (cell != this) neighbours.add(cell);
+        }));
+
+    return neighbours;
   }
 
   int get numberWallsOff => 4 - numberWallsOn;

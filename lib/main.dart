@@ -38,48 +38,52 @@ class _MyHomePageState extends State<MyHomePage> {
     maze = Maze(50, 50);
     // maze.recursiveRandomizedDepthFirstSearch();
     // maze.randomizedKruskalAlgorithm();
-    maze.randomizedPrimAlgorithm();
+    // maze.randomizedPrimAlgorithm();
+    maze.randomizedAldousBroderAlgorithm();
   }
 
   void _incrementCounter() {
-    setState(() {
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          double squareDimension = min(constraints.maxWidth / this.maze.columns,
-              constraints.maxHeight / this.maze.rows);
+      body: Padding(
+        padding: EdgeInsets.all(10),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            double squareDimension = min(
+                constraints.maxWidth / this.maze.columns,
+                constraints.maxHeight / this.maze.rows);
 
-          print(squareDimension);
+            print(squareDimension);
 
-          return Column(
-            children: List.generate(
-              this.maze.rows,
-              (row) {
-                return Row(
-                  children: List.generate(
-                    this.maze.columns,
-                    (column) => Container(
-                      child: CustomPaint(
-                        size: Size.square(squareDimension),
-                        painter: CustomPainterMazeSquare(
-                            directions: this
-                                .maze
-                                .getCell(row: row, column: column)
-                                .onWalls),
+            return Column(
+              children: List.generate(
+                this.maze.rows,
+                (row) {
+                  return Row(
+                    children: List.generate(
+                      this.maze.columns,
+                      (column) => Container(
+                        child: CustomPaint(
+                          size: Size.square(squareDimension),
+                          painter: CustomPainterMazeSquare(
+                              directions: this
+                                  .maze
+                                  .getCell(row: row, column: column)
+                                  .onWalls),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-              growable: false,
-            ),
-          );
-        },
+                  );
+                },
+                growable: false,
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
