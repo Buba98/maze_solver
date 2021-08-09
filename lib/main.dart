@@ -36,12 +36,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     maze = Maze(50, 50);
-    maze.recursiveRandomizedDepthFirstSearch();
+    // maze.recursiveRandomizedDepthFirstSearch();
+    maze.randomizedKruskalAlgorithm();
   }
 
   void _incrementCounter() {
     setState(() {
-      maze.debugPrintMaze();
     });
   }
 

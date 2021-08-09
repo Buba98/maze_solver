@@ -61,58 +61,6 @@ class Maze {
     return unvisitedCells;
   }
 
-  /*void iterativeRandomizedDepthFirstSearch() {
-    List<Cell> stack = [];
-    List<Cell> unvisitedCells = this.unvisitedCells;
-
-    stack.add(unvisitedCells.removeAt(
-        MathUtils.randomNumberWithinRangeInclusiveFromZero(
-            this.rows * this.columns - 1))
-      ..isVisited = true);
-
-    Cell currentCell;
-    List<Directions> unvisitedCellsDirections;
-
-    while (stack.isNotEmpty) {
-      currentCell = stack.removeAt(
-          MathUtils.randomNumberWithinRangeInclusiveFromZero(stack.length - 1));
-
-      unvisitedCellsDirections = getUnvisitedCellsDirections(currentCell);
-
-      if (unvisitedCellsDirections.isNotEmpty) {
-        stack.add(currentCell);
-        switch (unvisitedCellsDirections[
-            MathUtils.randomNumberWithinRangeInclusiveFromZero(
-                unvisitedCellsDirections.length - 1)]) {
-          case Directions.UP:
-            currentCell.wallUp.isWall = false;
-            stack.add(
-                getCell(row: currentCell.row + 1, column: currentCell.column)
-                  ..isVisited = true);
-            break;
-          case Directions.DOWN:
-            currentCell.wallDown.isWall = false;
-            stack.add(
-                getCell(row: currentCell.row - 1, column: currentCell.column)
-                  ..isVisited = true);
-            break;
-          case Directions.LEFT:
-            currentCell.wallLeft.isWall = false;
-            stack.add(
-                getCell(row: currentCell.row, column: currentCell.column - 1)
-                  ..isVisited = true);
-            break;
-          case Directions.RIGHT:
-            currentCell.wallRight.isWall = false;
-            stack.add(
-                getCell(row: currentCell.row, column: currentCell.column + 1)
-                  ..isVisited = true);
-            break;
-        }
-      }
-    }
-  }*/
-
   void recursiveRandomizedDepthFirstSearch() {
     int start = MathUtils.randomNumberWithinRangeInclusiveFromZero(
         this.rows * this.columns - 1);
@@ -157,29 +105,40 @@ class Maze {
     }
   }
 
-  void debugPrintMaze() {
-    String s;
+  void randomizedKruskalAlgorithm() {
+    List<Wall> walls = [];
+    List<List<Cell>> listsOfCells = [];
 
-    for (int row = 0; row < this.rows; row++) {
-      s = "";
-      for (int column = 0; column < this.columns; column++) {
-        s += getCell(row: row, column: column).wallUp.isWall ? "oo" : "**";
+    _map.forEach((List<Cell> cells) => cells.forEach((Cell cell) {
+          if (cell.row > 0) walls.add(cell.wallUp);
+          if (cell.column > 0) walls.add(cell.wallLeft);
+          listsOfCells.add([cell]);
+        }));
+
+    Wall wall;
+    List<List<Cell>> cells1;
+
+    while (walls.isNotEmpty) {
+      cells1 = [];
+
+      wall = walls.removeAt(
+          MathUtils.randomNumberWithinRangeInclusiveFromZero(walls.length - 1));
+
+      listsOfCells.forEach((List<Cell> cells) {
+        if (cells.contains(wall.cells[0]) || cells.contains(wall.cells[1]))
+          cells1.add(cells);
+      });
+
+      if (cells1.length != 2)
+        continue;
+      else if (cells1[0] == cells1[1])
+        continue;
+      else {
+        listsOfCells.remove(cells1[1]);
+        cells1[0].addAll(cells1[1]);
+        wall.isWall = false;
       }
-      print(s);
-
-      s = "";
-      for (int column = 0; column < this.columns; column++) {
-        s += getCell(row: row, column: column).wallLeft.isWall ? "o" : "*";
-        s += getCell(row: row, column: column).isVisited ? "*" : "!";
-      }
-      print(s);
     }
-
-    s = "";
-    for (int column = 0; column < this.columns; column++) {
-      s += getCell(row: rows - 1, column: column).wallUp.isWall ? "oo" : "!!";
-    }
-    print(s);
   }
 }
 
@@ -195,7 +154,12 @@ class Cell {
       required this.wallDown,
       required this.wallLeft,
       required this.wallRight,
-      this.isVisited = false});
+      this.isVisited = false}) {
+    wallUp.cells.add(this);
+    wallDown.cells.add(this);
+    wallLeft.cells.add(this);
+    wallRight.cells.add(this);
+  }
 
   int get numberWallsOn {
     int i = 0;
@@ -236,6 +200,7 @@ class Cell {
 
 class Wall {
   bool isWall;
+  List<Cell> cells = [];
 
   Wall({this.isWall = true});
 }
