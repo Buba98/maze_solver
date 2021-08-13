@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maze_solver/bloc/maze_bloc.dart';
 import 'package:maze_solver/util/custom_painter_maze_square.dart';
+import 'package:maze_solver/util/directions.dart';
 
 void main() {
   runApp(MyApp());
@@ -87,8 +88,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder:
                           (BuildContext context, BoxConstraints constraints) {
                         double squareDimension = min(
-                            constraints.maxWidth / state.maze.columns,
-                            constraints.maxHeight / state.maze.rows);
+                          constraints.maxWidth / state.maze.columns,
+                          constraints.maxHeight / state.maze.rows,
+                        );
                         return Column(
                           children: List.generate(
                             state.maze.rows,
@@ -100,16 +102,31 @@ class _MyHomePageState extends State<MyHomePage> {
                                     child: CustomPaint(
                                       size: Size.square(squareDimension),
                                       painter: CustomPainterMazeSquare(
-                                          cursor: state is ProcessingState
-                                              ? (state.row1 == row &&
-                                                      state.column1 ==
-                                                          column) ||
-                                                  (state.row2 == row &&
-                                                      state.column2 == column)
-                                              : false,
-                                          directions: state.maze
-                                              .getCell(row: row, column: column)
-                                              .onWalls),
+                                        cursor: state is ProcessingState
+                                            ? (state.row1 == row &&
+                                                    state.column1 == column) ||
+                                                (state.row2 == row &&
+                                                    state.column2 == column)
+                                            : false,
+                                        directions: state.maze
+                                            .getCell(
+                                              row: row,
+                                              column: column,
+                                            )
+                                            .onWalls
+                                          ..removeWhere((Directions direction) {
+                                            switch (direction) {
+                                              case Directions.DOWN:
+                                                return row !=
+                                                    state.maze.rows - 1;
+                                              case Directions.RIGHT:
+                                                return column !=
+                                                    state.maze.columns - 1;
+                                              default:
+                                                return false;
+                                            }
+                                          }),
+                                      ),
                                     ),
                                   ),
                                 ),

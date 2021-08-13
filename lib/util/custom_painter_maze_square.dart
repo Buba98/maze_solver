@@ -32,23 +32,23 @@ class CustomPainterMazeSquare extends CustomPainter {
     for (Directions direction in directions)
       switch (direction) {
         case Directions.UP:
-          Offset start = Offset(0, 0);
-          Offset end = Offset(size.width, 0);
+          Offset start = Offset(0, size.width * .05);
+          Offset end = Offset(size.width, size.width * .05);
           canvas.drawLine(start, end, paintForeground);
           break;
         case Directions.DOWN:
-          Offset start = Offset(0, size.height);
-          Offset end = Offset(size.width, size.height);
+          Offset start = Offset(0, size.height - size.width * .05);
+          Offset end = Offset(size.width, size.height - size.width * .05);
           canvas.drawLine(start, end, paintForeground);
           break;
         case Directions.LEFT:
-          Offset start = Offset(0, 0);
-          Offset end = Offset(0, size.height);
+          Offset start = Offset(size.width * .05, 0);
+          Offset end = Offset(size.width * .05, size.height);
           canvas.drawLine(start, end, paintForeground);
           break;
         case Directions.RIGHT:
-          Offset start = Offset(size.width, 0);
-          Offset end = Offset(size.width, size.height);
+          Offset start = Offset(size.width - size.width * .05, 0);
+          Offset end = Offset(size.width - size.width * .05, size.height);
           canvas.drawLine(start, end, paintForeground);
           break;
       }
