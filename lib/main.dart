@@ -34,13 +34,6 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controllerRows = TextEditingController();
   final TextEditingController _controllerColumns = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      mazeBloc.add(AlgorithmChoice(
-          algorithm: Algorithms.RECURSIVE_RANDOMIZED_DEPTH_FIRST_SEARCH));
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

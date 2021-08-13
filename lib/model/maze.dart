@@ -76,7 +76,10 @@ class Maze {
     int start = MathUtils.randomNumberWithinRangeInclusiveFromZero(
         this.rows * this.columns - 1);
 
-    _recursiveImplementation(cell: getCellByIndex(index: start));
+    _recursiveImplementation(
+      cell: getCellByIndex(index: start),
+      mazeBloc: mazeBloc,
+    );
     mazeBloc?.add(DoneMaze());
   }
 
@@ -93,34 +96,44 @@ class Maze {
           mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              cell: getCell(row: cell.row - 1, column: cell.column));
+            cell: getCell(row: cell.row - 1, column: cell.column),
+            mazeBloc: mazeBloc,
+          );
           break;
         case Directions.DOWN:
           cell.wallDown.isWall = false;
           mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              cell: getCell(row: cell.row + 1, column: cell.column));
+            cell: getCell(row: cell.row + 1, column: cell.column),
+            mazeBloc: mazeBloc,
+          );
           break;
         case Directions.LEFT:
           cell.wallLeft.isWall = false;
           mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              cell: getCell(row: cell.row, column: cell.column - 1));
+            cell: getCell(row: cell.row, column: cell.column - 1),
+            mazeBloc: mazeBloc,
+          );
           break;
         case Directions.RIGHT:
           cell.wallRight.isWall = false;
           mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              cell: getCell(row: cell.row, column: cell.column + 1));
+            cell: getCell(row: cell.row, column: cell.column + 1),
+            mazeBloc: mazeBloc,
+          );
           break;
       }
 
-      _recursiveImplementation(cell: cell);
+      _recursiveImplementation(
+        cell: cell,
+        mazeBloc: mazeBloc,
+      );
     }
-    mazeBloc?.add(DoneMaze());
   }
 
   void randomizedKruskalAlgorithm({MazeBloc? mazeBloc}) {
