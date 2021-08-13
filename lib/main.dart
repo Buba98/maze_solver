@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:maze_solver/maze.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maze_solver/bloc/maze_bloc.dart';
 import 'package:maze_solver/util/custom_painter_maze_square.dart';
-import 'package:maze_solver/util/directions.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,65 +30,110 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late final Maze maze;
-
-  @override
-  void initState() {
-    super.initState();
-    maze = Maze(50, 50);
-    // maze.recursiveRandomizedDepthFirstSearch();
-    // maze.randomizedKruskalAlgorithm();
-    // maze.randomizedPrimAlgorithm();
-    maze.randomizedAldousBroderAlgorithm();
-  }
+  final MazeBloc mazeBloc = MazeBloc();
+  final TextEditingController _controllerRows = TextEditingController();
+  final TextEditingController _controllerColumns = TextEditingController();
 
   void _incrementCounter() {
-    setState(() {});
+    setState(() {
+      mazeBloc.add(AlgorithmChoice(
+          algorithm: Algorithms.RECURSIVE_RANDOMIZED_DEPTH_FIRST_SEARCH));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(10),
-        child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            double squareDimension = min(
-                constraints.maxWidth / this.maze.columns,
-                constraints.maxHeight / this.maze.rows);
-
-            print(squareDimension);
-
-            return Column(
-              children: List.generate(
-                this.maze.rows,
-                (row) {
-                  return Row(
-                    children: List.generate(
-                      this.maze.columns,
-                      (column) => Container(
-                        child: CustomPaint(
-                          size: Size.square(squareDimension),
-                          painter: CustomPainterMazeSquare(
-                              directions: this
-                                  .maze
-                                  .getCell(row: row, column: column)
-                                  .onWalls),
-                        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(10),
+              child: BlocBuilder(
+                bloc: mazeBloc,
+                builder: (BuildContext context, MazeState state) {
+                  if (state is InitialState) {
+                    return Form(
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              hintText: 'Enter rows',
+                            ),
+                            controller: _controllerRows,
+                          ),
+                          TextFormField(
+                            decoration: const InputDecoration(
+                              hintText: 'Enter columns',
+                            ),
+                            controller: _controllerColumns,
+                          ),
+                          ElevatedButton(
+                            onPressed: () => mazeBloc.add(CreateMaze(
+                                rows: int.parse(_controllerRows.text),
+                                columns: int.parse(_controllerColumns.text))),
+                            child: const Text('Generate'),
+                          ),
+                        ],
                       ),
-                    ),
-                  );
+                    );
+                  } else if (state is CreateState) {
+                    return Column(
+                      children: List.generate(
+                        Algorithms.values.length,
+                        (index) => ElevatedButton(
+                          onPressed: () => mazeBloc.add(AlgorithmChoice(
+                              algorithm: Algorithms.values[index])),
+                          child: Text(Algorithms.values[index].toString()),
+                        ),
+                        growable: false,
+                      ),
+                    );
+                  } else {
+                    return LayoutBuilder(
+                      builder:
+                          (BuildContext context, BoxConstraints constraints) {
+                        double squareDimension = min(
+                            constraints.maxWidth / state.maze.columns,
+                            constraints.maxHeight / state.maze.rows);
+                        return Column(
+                          children: List.generate(
+                            state.maze.rows,
+                            (row) {
+                              return Row(
+                                children: List.generate(
+                                  state.maze.columns,
+                                  (column) => Container(
+                                    child: CustomPaint(
+                                      size: Size.square(squareDimension),
+                                      painter: CustomPainterMazeSquare(
+                                          cursor: state is ProcessingState
+                                              ? (state.row1 == row &&
+                                                      state.column1 ==
+                                                          column) ||
+                                                  (state.row2 == row &&
+                                                      state.column2 == column)
+                                              : false,
+                                          directions: state.maze
+                                              .getCell(row: row, column: column)
+                                              .onWalls),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            growable: false,
+                          ),
+                        );
+                      },
+                    );
+                  }
                 },
-                growable: false,
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        child: Icon(Icons.refresh),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

@@ -1,15 +1,17 @@
+import 'package:maze_solver/bloc/maze_bloc.dart';
 import 'package:maze_solver/util/directions.dart';
 import 'package:maze_solver/util/mathUtil.dart';
 
 class Maze {
-  late final List<List<Cell>> _map;
-  late final int rows, columns;
+  final List<List<Cell>> _map = [];
 
   Maze(int rows, int columns) {
-    this.rows = rows;
-    this.columns = columns;
-    this._map = [];
+    init(rows: rows, columns: columns);
+  }
 
+  Maze.lateInit();
+
+  void init({required int rows, required int columns}) {
     for (int row = 0; row < rows; row++) {
       _map.add([]);
       for (int column = 0; column < columns; column++) {
@@ -31,20 +33,29 @@ class Maze {
     }
   }
 
+  int get rows => this._map.length;
+
+  int get columns => this._map[0].length;
+
   List<Directions> getUnvisitedCellsDirections(Cell cell) {
     List<Directions> availableDirections = [];
+
     if (cell.row > 0 &&
         !getCell(row: cell.row - 1, column: cell.column).isVisited)
       availableDirections.add(Directions.UP);
+
     if (cell.row < this.rows - 1 &&
         !getCell(row: cell.row + 1, column: cell.column).isVisited)
       availableDirections.add(Directions.DOWN);
+
     if (cell.column > 0 &&
         !getCell(row: cell.row, column: cell.column - 1).isVisited)
       availableDirections.add(Directions.LEFT);
+
     if (cell.column < this.columns - 1 &&
         !getCell(row: cell.row, column: cell.column + 1).isVisited)
       availableDirections.add(Directions.RIGHT);
+
     return availableDirections;
   }
 
@@ -61,14 +72,15 @@ class Maze {
     return unvisitedCells;
   }
 
-  void recursiveRandomizedDepthFirstSearch() {
+  void recursiveRandomizedDepthFirstSearch({MazeBloc? mazeBloc}) {
     int start = MathUtils.randomNumberWithinRangeInclusiveFromZero(
         this.rows * this.columns - 1);
 
-    _recursiveImplementation(getCellByIndex(index: start));
+    _recursiveImplementation(cell: getCellByIndex(index: start));
+    mazeBloc?.add(DoneMaze());
   }
 
-  void _recursiveImplementation(Cell cell) {
+  void _recursiveImplementation({required Cell cell, MazeBloc? mazeBloc}) {
     cell.isVisited = true;
     List<Directions> availableDirections = getUnvisitedCellsDirections(cell);
 
@@ -78,34 +90,40 @@ class Maze {
               availableDirections.length - 1)]) {
         case Directions.UP:
           cell.wallUp.isWall = false;
+          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
+
           _recursiveImplementation(
-              getCell(row: cell.row - 1, column: cell.column));
+              cell: getCell(row: cell.row - 1, column: cell.column));
           break;
         case Directions.DOWN:
           cell.wallDown.isWall = false;
+          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              getCell(row: cell.row + 1, column: cell.column));
+              cell: getCell(row: cell.row + 1, column: cell.column));
           break;
         case Directions.LEFT:
           cell.wallLeft.isWall = false;
+          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              getCell(row: cell.row, column: cell.column - 1));
+              cell: getCell(row: cell.row, column: cell.column - 1));
           break;
         case Directions.RIGHT:
           cell.wallRight.isWall = false;
+          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
-              getCell(row: cell.row, column: cell.column + 1));
+              cell: getCell(row: cell.row, column: cell.column + 1));
           break;
       }
 
-      _recursiveImplementation(cell);
+      _recursiveImplementation(cell: cell);
     }
+    mazeBloc?.add(DoneMaze());
   }
 
-  void randomizedKruskalAlgorithm() {
+  void randomizedKruskalAlgorithm({MazeBloc? mazeBloc}) {
     List<Wall> walls = [];
     List<List<Cell>> listsOfCells = [];
 
@@ -137,11 +155,18 @@ class Maze {
         listsOfCells.remove(cells1[1]);
         cells1[0].addAll(cells1[1]);
         wall.isWall = false;
+        mazeBloc?.add(UpdateMaze(
+          row1: wall.cells[0].row,
+          column1: wall.cells[0].column,
+          row2: wall.cells[1].row,
+          column2: wall.cells[1].column,
+        ));
       }
     }
+    mazeBloc?.add(DoneMaze());
   }
 
-  void randomizedPrimAlgorithm() {
+  void randomizedPrimAlgorithm({MazeBloc? mazeBloc}) {
     Cell cell = getCellByIndex(
         index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
             this.rows * this.columns - 1))
@@ -159,6 +184,12 @@ class Maze {
         continue;
       else {
         wall.isWall = false;
+        mazeBloc?.add(UpdateMaze(
+          row1: wall.cells[0].row,
+          column1: wall.cells[0].column,
+          row2: wall.cells[1].row,
+          column2: wall.cells[1].column,
+        ));
         if (wall.cells[0].isVisited) {
           wall.cells[1]
             ..isVisited = true
@@ -178,9 +209,10 @@ class Maze {
         }
       }
     }
+    mazeBloc?.add(DoneMaze());
   }
 
-  void randomizedAldousBroderAlgorithm() {
+  void randomizedAldousBroderAlgorithm({MazeBloc? mazeBloc}) {
     int numberUnvisitedCells = this.rows * this.columns;
 
     Cell cell = getCellByIndex(
@@ -195,18 +227,25 @@ class Maze {
 
     while (numberUnvisitedCells > 0) {
       neighbours = cell.neighbours;
-      neighbour = neighbours[MathUtils.randomNumberWithinRangeInclusiveFromZero(neighbours.length - 1)];
-      if(!neighbour.isVisited) {
+      neighbour = neighbours[MathUtils.randomNumberWithinRangeInclusiveFromZero(
+          neighbours.length - 1)];
+      if (!neighbour.isVisited) {
         neighbour.isVisited = true;
         numberUnvisitedCells -= 1;
-        for(Wall wall in cell.walls)
-          if(wall.cells.contains(neighbour)){
+        for (Wall wall in cell.walls)
+          if (wall.cells.contains(neighbour)) {
             wall.isWall = false;
+            mazeBloc?.add(UpdateMaze(
+                row1: wall.cells[0].row,
+                column1: wall.cells[0].column,
+                row2: wall.cells[1].row,
+                column2: wall.cells[1].column));
             break;
           }
       }
       cell = neighbour;
     }
+    mazeBloc?.add(DoneMaze());
   }
 }
 

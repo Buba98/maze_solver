@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'directions.dart';
 
 class CustomPainterMazeSquare extends CustomPainter {
-  final Color colorForeground, colorBackground;
+  final Color colorForeground, colorBackground, colorBackgroundCursor;
   final List<Directions> directions;
+  final bool cursor;
 
-  CustomPainterMazeSquare(
-      {this.colorForeground = Colors.teal,
-      this.colorBackground = Colors.orange,
-      required this.directions});
+  CustomPainterMazeSquare({
+    this.colorForeground = Colors.teal,
+    this.colorBackground = Colors.orange,
+    this.cursor = false,
+    this.colorBackgroundCursor = Colors.blue,
+    required this.directions,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -18,7 +22,8 @@ class CustomPainterMazeSquare extends CustomPainter {
       ..color = colorBackground
       ..style = PaintingStyle.fill;
 
-    canvas.drawRect(Rect.fromLTRB(0, 0, size.width, size.height), paintBackground);
+    canvas.drawRect(
+        Rect.fromLTRB(0, 0, size.width, size.height), paintBackground);
 
     Paint paintForeground = Paint()
       ..color = colorForeground
