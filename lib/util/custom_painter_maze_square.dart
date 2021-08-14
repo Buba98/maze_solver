@@ -7,6 +7,7 @@ class CustomPainterMazeSquare extends CustomPainter {
   final Color colorForeground, colorBackground, colorBackgroundCursor;
   final List<Directions> directions;
   final bool cursor;
+  final bool cornerCorrectionUpLeft;
 
   CustomPainterMazeSquare({
     this.colorForeground = Colors.teal,
@@ -14,12 +15,13 @@ class CustomPainterMazeSquare extends CustomPainter {
     this.cursor = false,
     this.colorBackgroundCursor = Colors.blue,
     required this.directions,
+    this.cornerCorrectionUpLeft = false,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     Paint paintBackground = Paint()
-      ..color = colorBackground
+      ..color = cursor ? colorBackgroundCursor : colorBackground
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -52,6 +54,12 @@ class CustomPainterMazeSquare extends CustomPainter {
           canvas.drawLine(start, end, paintForeground);
           break;
       }
+
+    if (cornerCorrectionUpLeft) {
+      Offset start = Offset(0, size.width * .05);
+      Offset end = Offset(size.width * .1, size.width * .05);
+      canvas.drawLine(start, end, paintForeground);
+    }
   }
 
   @override

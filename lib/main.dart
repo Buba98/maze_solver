@@ -34,6 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final MazeBloc mazeBloc = MazeBloc();
   final TextEditingController _controllerRows = TextEditingController();
   final TextEditingController _controllerColumns = TextEditingController();
+  late Algorithms choice;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             controller: _controllerColumns,
                           ),
                           ElevatedButton(
-                            onPressed: () => mazeBloc.add(CreateMaze(
+                            onPressed: () => mazeBloc.add(CreateEvent(
                                 rows: int.parse(_controllerRows.text),
                                 columns: int.parse(_controllerColumns.text))),
                             child: const Text('Generate'),
@@ -76,8 +77,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: List.generate(
                         Algorithms.values.length,
                         (index) => ElevatedButton(
-                          onPressed: () => mazeBloc.add(AlgorithmChoice(
-                              algorithm: Algorithms.values[index])),
+                          onPressed: () {
+                            mazeBloc.add(AlgorithmChoiceEvent(
+                                algorithm: Algorithms.values[index]));
+                            choice = Algorithms.values[index];
+                          },
                           child: Text(Algorithms.values[index].toString()),
                         ),
                         growable: false,
@@ -102,6 +106,21 @@ class _MyHomePageState extends State<MyHomePage> {
                                     child: CustomPaint(
                                       size: Size.square(squareDimension),
                                       painter: CustomPainterMazeSquare(
+                                        // cornerCorrectionUpLeft: false,
+                                        cornerCorrectionUpLeft: column > 0 &&
+                                            row > 0 &&
+                                            state.maze
+                                                .getCell(
+                                                    row: row,
+                                                    column: column - 1)
+                                                .wallUp
+                                                .isWall &&
+                                            state.maze
+                                                .getCell(
+                                                    row: row - 1,
+                                                    column: column)
+                                                .wallLeft
+                                                .isWall,
                                         cursor: state is ProcessingState
                                             ? (state.row1 == row &&
                                                     state.column1 == column) ||
@@ -114,18 +133,20 @@ class _MyHomePageState extends State<MyHomePage> {
                                               column: column,
                                             )
                                             .onWalls
-                                          ..removeWhere((Directions direction) {
-                                            switch (direction) {
-                                              case Directions.DOWN:
-                                                return row !=
-                                                    state.maze.rows - 1;
-                                              case Directions.RIGHT:
-                                                return column !=
-                                                    state.maze.columns - 1;
-                                              default:
-                                                return false;
-                                            }
-                                          }),
+                                          ..removeWhere(
+                                            (Directions direction) {
+                                              switch (direction) {
+                                                case Directions.DOWN:
+                                                  return row !=
+                                                      state.maze.rows - 1;
+                                                case Directions.RIGHT:
+                                                  return column !=
+                                                      state.maze.columns - 1;
+                                                default:
+                                                  return false;
+                                              }
+                                            },
+                                          ),
                                       ),
                                     ),
                                   ),
@@ -143,6 +164,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          mazeBloc.add(RestoreEvent());
+          mazeBloc.add(AlgorithmChoiceEvent(algorithm: choice));
+        },
+        child: const Icon(Icons.refresh),
+        backgroundColor: Colors.green,
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:maze_solver/util/directions.dart';
 enum Algorithms {
   RANDOMIZED_KRUSKAL,
   RECURSIVE_RANDOMIZED_DEPTH_FIRST_SEARCH,
+  ITERATIVE_RANDOMIZED_DEPTH_FIRST_SEARCH,
   RANDOMIZED_PRIM,
   RANDOMIZED_ALDOUS_BRODER,
 }
@@ -17,19 +18,21 @@ abstract class MazeEvent {
   MazeEvent();
 }
 
-class DoneMaze extends MazeEvent {}
+class DoneEvent extends MazeEvent {}
 
-class AlgorithmChoice extends MazeEvent {
+class AlgorithmChoiceEvent extends MazeEvent {
   final Algorithms algorithm;
 
-  AlgorithmChoice({required this.algorithm});
+  AlgorithmChoiceEvent({required this.algorithm});
 }
 
-class UpdateMaze extends MazeEvent {
+class RestoreEvent extends MazeEvent {}
+
+class UpdateEvent extends MazeEvent {
   final int? row1, column1;
   final int? row2, column2;
 
-  UpdateMaze({
+  UpdateEvent({
     this.row1,
     this.column1,
     this.row2,
@@ -37,10 +40,10 @@ class UpdateMaze extends MazeEvent {
   });
 }
 
-class CreateMaze extends MazeEvent {
+class CreateEvent extends MazeEvent {
   final int rows, columns;
 
-  CreateMaze({
+  CreateEvent({
     required this.rows,
     required this.columns,
   });
@@ -86,10 +89,10 @@ class MazeBloc extends Bloc<MazeEvent, MazeState> {
 
   @override
   Stream<MazeState> mapEventToState(MazeEvent event) async* {
-    if (event is CreateMaze) {
+    if (event is CreateEvent) {
       maze.init(rows: event.rows, columns: event.columns);
       yield CreateState(maze: maze);
-    } else if (event is AlgorithmChoice) {
+    } else if (event is AlgorithmChoiceEvent) {
       switch (event.algorithm) {
         case Algorithms.RANDOMIZED_KRUSKAL:
           maze.randomizedKruskalAlgorithm(mazeBloc: this);
@@ -103,8 +106,11 @@ class MazeBloc extends Bloc<MazeEvent, MazeState> {
         case Algorithms.RANDOMIZED_ALDOUS_BRODER:
           maze.randomizedAldousBroderAlgorithm(mazeBloc: this);
           break;
+        case Algorithms.ITERATIVE_RANDOMIZED_DEPTH_FIRST_SEARCH:
+          maze.iterativeRandomizedDepthFirstSearch(mazeBloc: this);
+          break;
       }
-    } else if (event is UpdateMaze) {
+    } else if (event is UpdateEvent) {
       yield ProcessingState(
         maze: maze,
         row1: event.row1,
@@ -112,8 +118,11 @@ class MazeBloc extends Bloc<MazeEvent, MazeState> {
         row2: event.row2,
         column2: event.column2,
       );
-    } else if (event is DoneMaze) {
+    } else if (event is DoneEvent) {
       yield DoneState(maze: maze);
+    } else if (event is RestoreEvent) {
+      maze.restore();
+      yield CreateState(maze: maze);
     }
   }
 }

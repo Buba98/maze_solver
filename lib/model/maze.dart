@@ -11,6 +11,17 @@ class Maze {
 
   Maze.lateInit();
 
+  void restore() {
+    for (List<Cell> cells in _map) {
+      for (Cell cell in cells) {
+        cell.isVisited = false;
+        for (Wall wall in cell.walls) {
+          wall.isWall = true;
+        }
+      }
+    }
+  }
+
   void init({required int rows, required int columns}) {
     for (int row = 0; row < rows; row++) {
       _map.add([]);
@@ -72,6 +83,56 @@ class Maze {
     return unvisitedCells;
   }
 
+  void iterativeRandomizedDepthFirstSearch({MazeBloc? mazeBloc}) {
+    List<Cell> stack = [
+      getCellByIndex(
+          index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
+              this.rows * this.columns - 1))
+        ..isVisited = true
+    ];
+
+    Cell currentCell;
+    Cell chosenCell;
+    List<Cell> unvisitedNeighbours;
+
+    while (stack.isNotEmpty) {
+      currentCell = stack.removeAt(
+          MathUtils.randomNumberWithinRangeInclusiveFromZero(stack.length - 1));
+
+      unvisitedNeighbours = [];
+
+      for (Cell neighbour in currentCell.neighbours) {
+        if (!neighbour.isVisited) unvisitedNeighbours.add(neighbour);
+      }
+
+      if (unvisitedNeighbours.isNotEmpty) {
+        stack.add(currentCell);
+
+        chosenCell = unvisitedNeighbours[
+            MathUtils.randomNumberWithinRangeInclusiveFromZero(
+                unvisitedNeighbours.length - 1)];
+
+        for (Wall wall in chosenCell.walls) {
+          if (wall.cells.contains(currentCell)) {
+            wall.isWall = false;
+            chosenCell.isVisited = true;
+            mazeBloc?.add(
+              UpdateEvent(
+                row1: wall.cells[0].row,
+                column1: wall.cells[0].column,
+                row2: wall.cells[1].row,
+                column2: wall.cells[1].column,
+              ),
+            );
+            stack.add(chosenCell);
+            break;
+          }
+        }
+      }
+    }
+    mazeBloc?.add(DoneEvent());
+  }
+
   void recursiveRandomizedDepthFirstSearch({MazeBloc? mazeBloc}) {
     int start = MathUtils.randomNumberWithinRangeInclusiveFromZero(
         this.rows * this.columns - 1);
@@ -80,7 +141,7 @@ class Maze {
       cell: getCellByIndex(index: start),
       mazeBloc: mazeBloc,
     );
-    mazeBloc?.add(DoneMaze());
+    mazeBloc?.add(DoneEvent());
   }
 
   void _recursiveImplementation({required Cell cell, MazeBloc? mazeBloc}) {
@@ -93,7 +154,7 @@ class Maze {
               availableDirections.length - 1)]) {
         case Directions.UP:
           cell.wallUp.isWall = false;
-          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
+          mazeBloc?.add(UpdateEvent(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
             cell: getCell(row: cell.row - 1, column: cell.column),
@@ -102,7 +163,7 @@ class Maze {
           break;
         case Directions.DOWN:
           cell.wallDown.isWall = false;
-          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
+          mazeBloc?.add(UpdateEvent(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
             cell: getCell(row: cell.row + 1, column: cell.column),
@@ -111,7 +172,7 @@ class Maze {
           break;
         case Directions.LEFT:
           cell.wallLeft.isWall = false;
-          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
+          mazeBloc?.add(UpdateEvent(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
             cell: getCell(row: cell.row, column: cell.column - 1),
@@ -120,7 +181,7 @@ class Maze {
           break;
         case Directions.RIGHT:
           cell.wallRight.isWall = false;
-          mazeBloc?.add(UpdateMaze(row1: cell.row, column1: cell.column));
+          mazeBloc?.add(UpdateEvent(row1: cell.row, column1: cell.column));
 
           _recursiveImplementation(
             cell: getCell(row: cell.row, column: cell.column + 1),
@@ -168,7 +229,7 @@ class Maze {
         listsOfCells.remove(cells1[1]);
         cells1[0].addAll(cells1[1]);
         wall.isWall = false;
-        mazeBloc?.add(UpdateMaze(
+        mazeBloc?.add(UpdateEvent(
           row1: wall.cells[0].row,
           column1: wall.cells[0].column,
           row2: wall.cells[1].row,
@@ -176,7 +237,7 @@ class Maze {
         ));
       }
     }
-    mazeBloc?.add(DoneMaze());
+    mazeBloc?.add(DoneEvent());
   }
 
   void randomizedPrimAlgorithm({MazeBloc? mazeBloc}) {
@@ -197,7 +258,7 @@ class Maze {
         continue;
       else {
         wall.isWall = false;
-        mazeBloc?.add(UpdateMaze(
+        mazeBloc?.add(UpdateEvent(
           row1: wall.cells[0].row,
           column1: wall.cells[0].column,
           row2: wall.cells[1].row,
@@ -222,7 +283,7 @@ class Maze {
         }
       }
     }
-    mazeBloc?.add(DoneMaze());
+    mazeBloc?.add(DoneEvent());
   }
 
   void randomizedAldousBroderAlgorithm({MazeBloc? mazeBloc}) {
@@ -248,7 +309,7 @@ class Maze {
         for (Wall wall in cell.walls)
           if (wall.cells.contains(neighbour)) {
             wall.isWall = false;
-            mazeBloc?.add(UpdateMaze(
+            mazeBloc?.add(UpdateEvent(
                 row1: wall.cells[0].row,
                 column1: wall.cells[0].column,
                 row2: wall.cells[1].row,
@@ -258,7 +319,7 @@ class Maze {
       }
       cell = neighbour;
     }
-    mazeBloc?.add(DoneMaze());
+    mazeBloc?.add(DoneEvent());
   }
 }
 
