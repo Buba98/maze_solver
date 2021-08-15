@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maze_solver/model/maze.dart';
-import 'package:maze_solver/util/directions.dart';
 
 //algorithms
 
@@ -14,21 +13,21 @@ enum Algorithms {
 
 //events
 
-abstract class MazeEvent {
-  MazeEvent();
+abstract class MazeGenerationEvent {
+  MazeGenerationEvent();
 }
 
-class DoneEvent extends MazeEvent {}
+class DoneEvent extends MazeGenerationEvent {}
 
-class AlgorithmChoiceEvent extends MazeEvent {
+class AlgorithmChoiceEvent extends MazeGenerationEvent {
   final Algorithms algorithm;
 
   AlgorithmChoiceEvent({required this.algorithm});
 }
 
-class RestoreEvent extends MazeEvent {}
+class RestoreEvent extends MazeGenerationEvent {}
 
-class UpdateEvent extends MazeEvent {
+class UpdateEvent extends MazeGenerationEvent {
   final int? row1, column1;
   final int? row2, column2;
 
@@ -40,7 +39,7 @@ class UpdateEvent extends MazeEvent {
   });
 }
 
-class CreateEvent extends MazeEvent {
+class CreateEvent extends MazeGenerationEvent {
   final int rows, columns;
 
   CreateEvent({
@@ -51,21 +50,21 @@ class CreateEvent extends MazeEvent {
 
 //states
 
-abstract class MazeState {
+abstract class MazeGenerationState {
   Maze maze;
 
-  MazeState({required this.maze});
+  MazeGenerationState({required this.maze});
 }
 
-class InitialState extends MazeState {
+class InitialState extends MazeGenerationState {
   InitialState() : super(maze: Maze.lateInit());
 }
 
-class CreateState extends MazeState {
+class CreateState extends MazeGenerationState {
   CreateState({required Maze maze}) : super(maze: maze);
 }
 
-class ProcessingState extends MazeState {
+class ProcessingState extends MazeGenerationState {
   final int? row1, column1;
   final int? row2, column2;
 
@@ -74,21 +73,23 @@ class ProcessingState extends MazeState {
       : super(maze: maze);
 }
 
-class DoneState extends MazeState {
+class DoneState extends MazeGenerationState {
   DoneState({required Maze maze}) : super(maze: maze);
 }
 
 //bloc
 
-class MazeBloc extends Bloc<MazeEvent, MazeState> {
+class MazeGenerationBloc
+    extends Bloc<MazeGenerationEvent, MazeGenerationState> {
   late final Maze maze;
 
-  MazeBloc() : super(InitialState()) {
+  MazeGenerationBloc() : super(InitialState()) {
     maze = this.state.maze;
   }
 
   @override
-  Stream<MazeState> mapEventToState(MazeEvent event) async* {
+  Stream<MazeGenerationState> mapEventToState(
+      MazeGenerationEvent event) async* {
     if (event is CreateEvent) {
       maze.init(rows: event.rows, columns: event.columns);
       yield CreateState(maze: maze);

@@ -1,4 +1,4 @@
-import 'package:maze_solver/bloc/maze_bloc.dart';
+import 'package:maze_solver/bloc/maze_generation_bloc.dart';
 import 'package:maze_solver/util/directions.dart';
 import 'package:maze_solver/util/mathUtil.dart';
 
@@ -83,7 +83,7 @@ class Maze {
     return unvisitedCells;
   }
 
-  void iterativeRandomizedDepthFirstSearch({MazeBloc? mazeBloc}) {
+  void iterativeRandomizedDepthFirstSearch({MazeGenerationBloc? mazeBloc}) {
     List<Cell> stack = [
       getCellByIndex(
           index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
@@ -133,7 +133,7 @@ class Maze {
     mazeBloc?.add(DoneEvent());
   }
 
-  void recursiveRandomizedDepthFirstSearch({MazeBloc? mazeBloc}) {
+  void recursiveRandomizedDepthFirstSearch({MazeGenerationBloc? mazeBloc}) {
     int start = MathUtils.randomNumberWithinRangeInclusiveFromZero(
         this.rows * this.columns - 1);
 
@@ -144,7 +144,7 @@ class Maze {
     mazeBloc?.add(DoneEvent());
   }
 
-  void _recursiveImplementation({required Cell cell, MazeBloc? mazeBloc}) {
+  void _recursiveImplementation({required Cell cell, MazeGenerationBloc? mazeBloc}) {
     cell.isVisited = true;
     List<Directions> availableDirections = getUnvisitedCellsDirections(cell);
 
@@ -197,7 +197,7 @@ class Maze {
     }
   }
 
-  void randomizedKruskalAlgorithm({MazeBloc? mazeBloc}) {
+  void randomizedKruskalAlgorithm({MazeGenerationBloc? mazeBloc}) {
     List<Wall> walls = [];
     List<List<Cell>> listsOfCells = [];
 
@@ -240,7 +240,7 @@ class Maze {
     mazeBloc?.add(DoneEvent());
   }
 
-  void randomizedPrimAlgorithm({MazeBloc? mazeBloc}) {
+  void randomizedPrimAlgorithm({MazeGenerationBloc? mazeBloc}) {
     Cell cell = getCellByIndex(
         index: MathUtils.randomNumberWithinRangeInclusiveFromZero(
             this.rows * this.columns - 1))
@@ -286,7 +286,7 @@ class Maze {
     mazeBloc?.add(DoneEvent());
   }
 
-  void randomizedAldousBroderAlgorithm({MazeBloc? mazeBloc}) {
+  void randomizedAldousBroderAlgorithm({MazeGenerationBloc? mazeBloc}) {
     int numberUnvisitedCells = this.rows * this.columns;
 
     Cell cell = getCellByIndex(
