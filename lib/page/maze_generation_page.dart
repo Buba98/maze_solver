@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maze_solver/bloc/maze_generation_bloc.dart';
-import 'package:maze_solver/page/maze_solver_page.dart';
+import 'package:maze_solver/model/maze.dart';
+import 'package:maze_solver/page/maze_playing_page.dart';
 import 'package:maze_solver/util/custom_painter_maze_square.dart';
 import 'package:maze_solver/util/directions.dart';
 
@@ -75,30 +78,35 @@ class _MazeGenerationPageState extends State<MazeGenerationPage> {
                     return LayoutBuilder(
                       builder:
                           (BuildContext context, BoxConstraints constraints) {
+                        Maze maze = state.maze!;
+
                         double squareDimension = min(
-                          constraints.maxWidth / state.maze.columns,
-                          constraints.maxHeight / state.maze.rows,
+                          constraints.maxWidth / maze.columns,
+                          (constraints.maxHeight / maze.rows) * .9,
                         );
                         return Column(
                           children: List.generate(
-                            state.maze.rows,
+                            maze.rows,
                             (row) {
                               return Row(
                                 children: List.generate(
-                                  state.maze.columns,
+                                  maze.columns,
                                   (column) => Container(
                                     child: CustomPaint(
                                       size: Size.square(squareDimension),
                                       painter: CustomPainterMazeSquare(
+                                        isUseful: maze
+                                            .getCell(row: row, column: column)
+                                            .isUseful,
                                         cornerCorrectionUpLeft: column > 0 &&
                                             row > 0 &&
-                                            state.maze
+                                            maze
                                                 .getCell(
                                                     row: row,
                                                     column: column - 1)
                                                 .wallUp
                                                 .isWall &&
-                                            state.maze
+                                            maze
                                                 .getCell(
                                                     row: row - 1,
                                                     column: column)
@@ -110,7 +118,7 @@ class _MazeGenerationPageState extends State<MazeGenerationPage> {
                                                 (state.row2 == row &&
                                                     state.column2 == column)
                                             : false,
-                                        directions: state.maze
+                                        directions: maze
                                             .getCell(
                                               row: row,
                                               column: column,
@@ -120,11 +128,10 @@ class _MazeGenerationPageState extends State<MazeGenerationPage> {
                                             (Directions direction) {
                                               switch (direction) {
                                                 case Directions.DOWN:
-                                                  return row !=
-                                                      state.maze.rows - 1;
+                                                  return row != maze.rows - 1;
                                                 case Directions.RIGHT:
                                                   return column !=
-                                                      state.maze.columns - 1;
+                                                      maze.columns - 1;
                                                 default:
                                                   return false;
                                               }
@@ -136,8 +143,80 @@ class _MazeGenerationPageState extends State<MazeGenerationPage> {
                                 ),
                               );
                             },
-                            growable: false,
-                          ),
+                          )..add(
+                              mazeBloc.state is ProcessingState ||
+                                      mazeBloc.state is DoneState ||
+                                      mazeBloc.state is SolvedState
+                                  ? Expanded(
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 4),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                mazeBloc.add(RestoreEvent());
+                                                late StreamSubscription<
+                                                    MazeGenerationState> stream;
+                                                stream = mazeBloc.stream.listen(
+                                                  (MazeGenerationState state) {
+                                                    if (state is CreateState) {
+                                                      mazeBloc.add(
+                                                          AlgorithmChoiceEvent(
+                                                              algorithm:
+                                                                  choice));
+                                                      stream.cancel();
+                                                    }
+                                                  },
+                                                );
+                                              },
+                                              child: const Icon(Icons.refresh),
+                                            ),
+                                            Spacer(),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            MazePlayingPage(
+                                                                maze: mazeBloc
+                                                                    .maze)));
+                                              },
+                                              child:
+                                                  const Icon(Icons.play_arrow),
+                                            ),
+                                            Spacer(),
+                                            ElevatedButton(
+                                              onPressed: () => mazeBloc.add(
+                                                SolveEvent(
+                                                    startRow: 0,
+                                                    startColumn: 0,
+                                                    endRow: maze.rows - 1,
+                                                    endColumn:
+                                                        maze.columns - 1),
+                                              ),
+                                              child: const Icon(
+                                                  Icons.download_done_rounded),
+                                            ),
+                                            Spacer(),
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  mazeBloc.add(RestartEvent()),
+                                              child: const Icon(
+                                                  Icons.arrow_back_outlined),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox(
+                                      width: 0,
+                                      height: 0,
+                                    ),
+                            ),
                         );
                       },
                     );
@@ -147,18 +226,6 @@ class _MazeGenerationPageState extends State<MazeGenerationPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => MazeSolverPage(maze: mazeBloc.maze)));
-          // mazeBloc.add(RestoreEvent());
-          // mazeBloc.add(AlgorithmChoiceEvent(algorithm: choice));
-        },
-        child: const Icon(Icons.refresh),
-        backgroundColor: Colors.green,
       ),
     );
   }

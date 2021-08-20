@@ -5,33 +5,33 @@ import 'package:maze_solver/util/directions.dart';
 
 //events
 
-abstract class MazeSolvingEvent {}
+abstract class MazePlayingEvent {}
 
-class InitSolvingEvent extends MazeSolvingEvent {
+class InitPlayingEvent extends MazePlayingEvent {
   final Maze maze;
   final Player player;
 
-  InitSolvingEvent({
+  InitPlayingEvent({
     required this.maze,
     required this.player,
   });
 }
 
-class MoveSolvingEvent extends MazeSolvingEvent {
+class MovePlayingEvent extends MazePlayingEvent {
   final Directions directions;
 
-  MoveSolvingEvent({required this.directions});
+  MovePlayingEvent({required this.directions});
 }
 
 //states
 
-abstract class MazeSolvingState {
+abstract class MazePlayingState {
   Maze maze;
   Player player;
   final int rowStart, columnStart;
   final int rowEnd, columnEnd;
 
-  MazeSolvingState({
+  MazePlayingState({
     required this.maze,
     required this.player,
     required this.rowStart,
@@ -41,8 +41,8 @@ abstract class MazeSolvingState {
   });
 }
 
-class DoneSolvingState extends MazeSolvingState {
-  DoneSolvingState({
+class DonePlayingState extends MazePlayingState {
+  DonePlayingState({
     required Maze maze,
     required Player player,
     required int rowStart,
@@ -59,8 +59,8 @@ class DoneSolvingState extends MazeSolvingState {
         );
 }
 
-class UpdateSolvingState extends MazeSolvingState {
-  UpdateSolvingState({
+class UpdatePlayingState extends MazePlayingState {
+  UpdatePlayingState({
     required Maze maze,
     required Player player,
     required int rowStart,
@@ -77,8 +77,8 @@ class UpdateSolvingState extends MazeSolvingState {
         );
 }
 
-class InitialSolvingState extends MazeSolvingState {
-  InitialSolvingState({
+class InitialPlayingState extends MazePlayingState {
+  InitialPlayingState({
     required Maze maze,
     required Player player,
     required int rowStart,
@@ -97,16 +97,16 @@ class InitialSolvingState extends MazeSolvingState {
 
 //bloc
 
-class MazeSolvingBloc extends Bloc<MazeSolvingEvent, MazeSolvingState> {
+class MazePlayingBloc extends Bloc<MazePlayingEvent, MazePlayingState> {
   final Maze maze;
   late final Player player;
   late int rowStart, columnStart;
   late int rowEnd, columnEnd;
 
-  MazeSolvingBloc({
+  MazePlayingBloc({
     required this.maze,
   }) : super(
-          InitialSolvingState(
+          InitialPlayingState(
             maze: maze,
             player: Player(
               row: 0,
@@ -126,8 +126,8 @@ class MazeSolvingBloc extends Bloc<MazeSolvingEvent, MazeSolvingState> {
   }
 
   @override
-  Stream<MazeSolvingState> mapEventToState(MazeSolvingEvent event) async* {
-    if (event is MoveSolvingEvent) {
+  Stream<MazePlayingState> mapEventToState(MazePlayingEvent event) async* {
+    if (event is MovePlayingEvent) {
       switch (event.directions) {
         case Directions.UP:
           if (!maze
@@ -163,7 +163,7 @@ class MazeSolvingBloc extends Bloc<MazeSolvingEvent, MazeSolvingState> {
           break;
       }
       if (rowEnd == player.row && columnEnd == player.column) {
-        yield DoneSolvingState(
+        yield DonePlayingState(
           maze: maze,
           player: player,
           rowStart: rowStart,
@@ -172,7 +172,7 @@ class MazeSolvingBloc extends Bloc<MazeSolvingEvent, MazeSolvingState> {
           columnEnd: columnEnd,
         );
       } else {
-        yield UpdateSolvingState(
+        yield UpdatePlayingState(
           maze: maze,
           player: player,
           rowStart: rowStart,

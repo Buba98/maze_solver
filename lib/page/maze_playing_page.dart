@@ -4,17 +4,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:maze_solver/bloc/maze_solving_bloc.dart';
+import 'package:maze_solver/bloc/maze_playing_bloc.dart';
 import 'package:maze_solver/model/maze.dart';
 import 'package:maze_solver/util/custom_painter_maze_square.dart';
 import 'package:maze_solver/util/directions.dart';
 
-class MazeSolverPage extends StatelessWidget {
+class MazePlayingPage extends StatelessWidget {
   final Maze maze;
-  late final MazeSolvingBloc bloc;
+  late final MazePlayingBloc bloc;
 
-  MazeSolverPage({required this.maze}) {
-    bloc = MazeSolvingBloc(maze: maze);
+  MazePlayingPage({required this.maze}) {
+    bloc = MazePlayingBloc(maze: maze);
   }
 
   @override
@@ -27,21 +27,21 @@ class MazeSolverPage extends StatelessWidget {
             if (event is RawKeyDownEvent) {
              if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
                   event.logicalKey == LogicalKeyboardKey.keyW) {
-                bloc.add(MoveSolvingEvent(directions: Directions.UP));
+                bloc.add(MovePlayingEvent(directions: Directions.UP));
                 return KeyEventResult.handled;
               } else if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
                   event.logicalKey == LogicalKeyboardKey.keyS) {
-                bloc.add(MoveSolvingEvent(directions: Directions.DOWN));
+                bloc.add(MovePlayingEvent(directions: Directions.DOWN));
 
                 return KeyEventResult.handled;
               } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
                   event.logicalKey == LogicalKeyboardKey.keyA) {
-                bloc.add(MoveSolvingEvent(directions: Directions.LEFT));
+                bloc.add(MovePlayingEvent(directions: Directions.LEFT));
 
                 return KeyEventResult.handled;
               } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
                   event.logicalKey == LogicalKeyboardKey.keyD) {
-                bloc.add(MoveSolvingEvent(directions: Directions.RIGHT));
+                bloc.add(MovePlayingEvent(directions: Directions.RIGHT));
 
                 return KeyEventResult.handled;
               }
@@ -50,7 +50,7 @@ class MazeSolverPage extends StatelessWidget {
           },
           child: BlocBuilder(
             bloc: bloc,
-            builder: (BuildContext context, MazeSolvingState state) {
+            builder: (BuildContext context, MazePlayingState state) {
               return LayoutBuilder(
                 builder: (BuildContext context, BoxConstraints constraints) {
                   double squareDimension = min(

@@ -16,8 +16,10 @@ class CustomPainterMazeSquare extends CustomPainter {
   final bool hasPlayer;
   final bool isStart;
   final bool isEnd;
+  final bool isUseful;
 
   CustomPainterMazeSquare({
+    this.isUseful = true,
     this.colorCheckpoint = Colors.red,
     this.isStart = false,
     this.isEnd = false,
@@ -79,6 +81,17 @@ class CustomPainterMazeSquare extends CustomPainter {
 
     if (hasPlayer) {
       final icon = Icons.accessibility_new_outlined;
+
+      var builder = ParagraphBuilder(ParagraphStyle(
+          fontFamily: icon.fontFamily, fontSize: size.width * .4))
+        ..addText(String.fromCharCode(icon.codePoint));
+      var para = builder.build();
+      para.layout(const ParagraphConstraints(width: 60));
+      canvas.drawParagraph(para, Offset(size.width * .3, size.width * .3));
+    }
+
+    if (!isUseful) {
+      final icon = Icons.cancel;
 
       var builder = ParagraphBuilder(ParagraphStyle(
           fontFamily: icon.fontFamily, fontSize: size.width * .4))

@@ -5,20 +5,47 @@ import 'package:maze_solver/util/mathUtil.dart';
 class Maze {
   final List<List<Cell>> _map = [];
 
-  Maze(int rows, int columns) {
+  Maze({required int rows, required int columns}) {
     init(rows: rows, columns: columns);
   }
-
-  Maze.lateInit();
 
   void restore() {
     for (List<Cell> cells in _map) {
       for (Cell cell in cells) {
         cell.isVisited = false;
+        cell.isUseful = true;
         for (Wall wall in cell.walls) {
           wall.isWall = true;
         }
       }
+    }
+  }
+
+  void solveMaze({
+    required int startRow,
+    required int startColumn,
+    required int endRow,
+    required int endColumn,
+  }) {
+    bool modified = true;
+
+    Cell cellStart = getCell(row: startRow, column: startColumn);
+    Cell cellEnd = getCell(row: endRow, column: endColumn);
+
+    while (modified) {
+      modified = false;
+      _map.forEach(
+        (List<Cell> cells) => cells.forEach(
+          (Cell cell) {
+            if (cell != cellStart && cell != cellEnd && cell.isUseful) {
+              if (cell.usefulSimplyConnectedNeighbors.length < 2) {
+                cell.isUseful = false;
+                modified = true;
+              }
+            }
+          },
+        ),
+      );
     }
   }
 
@@ -144,7 +171,8 @@ class Maze {
     mazeBloc?.add(DoneEvent());
   }
 
-  void _recursiveImplementation({required Cell cell, MazeGenerationBloc? mazeBloc}) {
+  void _recursiveImplementation(
+      {required Cell cell, MazeGenerationBloc? mazeBloc}) {
     cell.isVisited = true;
     List<Directions> availableDirections = getUnvisitedCellsDirections(cell);
 
@@ -327,6 +355,7 @@ class Cell {
   final int row, column;
   final Wall wallUp, wallDown, wallLeft, wallRight;
   bool isVisited;
+  bool isUseful;
 
   Cell(
       {required this.row,
@@ -335,6 +364,7 @@ class Cell {
       required this.wallDown,
       required this.wallLeft,
       required this.wallRight,
+      this.isUseful = true,
       this.isVisited = false}) {
     wallUp.cells.add(this);
     wallDown.cells.add(this);
@@ -342,14 +372,19 @@ class Cell {
     wallRight.cells.add(this);
   }
 
-  int get numberWallsOn {
-    int i = 0;
-    if (wallUp.isWall) i += 1;
-    if (wallDown.isWall) i += 1;
-    if (wallLeft.isWall) i += 1;
-    if (wallRight.isWall) i += 1;
+  List<Cell> get usefulSimplyConnectedNeighbors {
+    List<Cell> neighbours = [];
 
-    return i;
+    walls.forEach(
+      (Wall wall) => wall.cells.forEach(
+        (Cell cell) {
+          if (cell != this && !wall.isWall && cell.isUseful)
+            neighbours.add(cell);
+        },
+      ),
+    );
+
+    return neighbours;
   }
 
   List<Cell> get neighbours {
@@ -362,8 +397,6 @@ class Cell {
     return neighbours;
   }
 
-  int get numberWallsOff => 4 - numberWallsOn;
-
   List<Wall> get walls => [wallUp, wallDown, wallLeft, wallRight];
 
   List<Directions> get onWalls {
@@ -373,17 +406,6 @@ class Cell {
     if (wallDown.isWall) walls.add(Directions.DOWN);
     if (wallLeft.isWall) walls.add(Directions.LEFT);
     if (wallRight.isWall) walls.add(Directions.RIGHT);
-
-    return walls;
-  }
-
-  List<Directions> get offWalls {
-    List<Directions> walls = [];
-
-    if (!wallUp.isWall) walls.add(Directions.UP);
-    if (!wallDown.isWall) walls.add(Directions.DOWN);
-    if (!wallLeft.isWall) walls.add(Directions.LEFT);
-    if (!wallRight.isWall) walls.add(Directions.RIGHT);
 
     return walls;
   }

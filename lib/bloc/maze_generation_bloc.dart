@@ -48,16 +48,30 @@ class CreateEvent extends MazeGenerationEvent {
   });
 }
 
+class RestartEvent extends MazeGenerationEvent {}
+
+class SolveEvent extends MazeGenerationEvent {
+  final int startRow, startColumn;
+  final int endRow, endColumn;
+
+  SolveEvent({
+    required this.startRow,
+    required this.startColumn,
+    required this.endRow,
+    required this.endColumn,
+  });
+}
+
 //states
 
 abstract class MazeGenerationState {
-  Maze maze;
+  Maze? maze;
 
-  MazeGenerationState({required this.maze});
+  MazeGenerationState({this.maze});
 }
 
 class InitialState extends MazeGenerationState {
-  InitialState() : super(maze: Maze.lateInit());
+  InitialState() : super();
 }
 
 class CreateState extends MazeGenerationState {
@@ -77,21 +91,23 @@ class DoneState extends MazeGenerationState {
   DoneState({required Maze maze}) : super(maze: maze);
 }
 
+class SolvedState extends MazeGenerationState {
+  SolvedState({required Maze maze}) : super(maze: maze);
+}
+
 //bloc
 
 class MazeGenerationBloc
     extends Bloc<MazeGenerationEvent, MazeGenerationState> {
-  late final Maze maze;
+  late Maze maze;
 
-  MazeGenerationBloc() : super(InitialState()) {
-    maze = this.state.maze;
-  }
+  MazeGenerationBloc() : super(InitialState());
 
   @override
   Stream<MazeGenerationState> mapEventToState(
       MazeGenerationEvent event) async* {
     if (event is CreateEvent) {
-      maze.init(rows: event.rows, columns: event.columns);
+      maze = Maze(rows: event.rows, columns: event.columns);
       yield CreateState(maze: maze);
     } else if (event is AlgorithmChoiceEvent) {
       switch (event.algorithm) {
@@ -124,6 +140,15 @@ class MazeGenerationBloc
     } else if (event is RestoreEvent) {
       maze.restore();
       yield CreateState(maze: maze);
+    } else if (event is RestartEvent) {
+      yield InitialState();
+    } else if (event is SolveEvent) {
+      maze.solveMaze(
+          startRow: event.startRow,
+          startColumn: event.startColumn,
+          endRow: event.endRow,
+          endColumn: event.endColumn);
+      yield SolvedState(maze: maze);
     }
   }
 }
